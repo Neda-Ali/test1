@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="9bc5d015-41e8-466b-8b5b-ab641c8120d9" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616"/>
+		</jms:active-mq-connection>
+	</jms:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="eef0fdbb-3481-4882-a8fe-327684be3c36" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:listener-config name="HTTP_Listener_config1" doc:name="HTTP Listener config" doc:id="08133e88-92b7-4791-8df0-3236bda42f78" >
+		<http:listener-connection host="0.0.0.0" port="8082" />
+	</http:listener-config>
+	<flow name="activemq_pocFlow" doc:id="5cf627fa-47b3-4d9f-841f-65fe2868e63f" >
+		<http:listener doc:name="Listener" doc:id="3330c911-3479-489b-a002-e14eaf17834e" path="/test" config-ref="HTTP_Listener_config"/>
+		<logger level="INFO" doc:name="Logger" doc:id="3644f8ea-ee8d-46aa-bd2b-e58e0727365d" message="start_flow"/>
+		<jms:consume doc:name="Consume" doc:id="17cbb538-f4a4-4caa-b53f-2bf632df6773" config-ref="JMS_Config" destination="MyQueue"/>
+		<ee:transform doc:name="Transform Message" doc:id="0f3cbc9c-1dda-455c-b9b5-5c349929b87c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="96caec5e-3b3d-4cf7-a8c1-3d78e33d7df8" message="end_flow"/>
+	</flow>
+	<flow name="activemq_pocFlow1" doc:id="653dc352-57d0-401a-96c3-6e69399a0187" >
+		<http:listener doc:name="Listener" doc:id="e3faa193-9b38-4a13-83ec-18eecbfb8418" path="/test" config-ref="HTTP_Listener_config1"/>
+		<logger level="INFO" doc:name="Logger" doc:id="beb42e4e-e8e4-459e-9cc8-53753532125e" />
+		<ee:transform doc:name="Transform Message" doc:id="00815620-924c-4954-8e30-853076b64e45" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"nishu":"please",
+	"do":"not",
+	"sleep": payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<jms:publish doc:name="Publish" doc:id="a7c4cbd5-daed-4be4-b189-ebc69dbc8b20" config-ref="JMS_Config" destination="MyQueue"/>
+		<logger level="INFO" doc:name="Logger" doc:id="949e5f0c-6eb5-4874-889a-27244a2fca87" />
+	</flow>
+</mule>
